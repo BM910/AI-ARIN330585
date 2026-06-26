@@ -15,6 +15,24 @@ def count_conflicts(variable: str, color: str, assignment: dict, neighbors: dict
             conflicts += 1
     return conflicts
 
+
+def backtrack(variables : list, domains : dict, assignment : dict, neighbors : dict):
+    if len(assignment) == len(variables):
+        return assignment
+
+    var = next(v for v in variables if v not in assignment)
+
+    for color in domains[var]:
+        if is_valid_coloring(var, color, assignment, neighbors):
+            assignment[var] = color
+
+            result = backtrack(variables, domains, assignment, neighbors)
+            if result is not None:
+                return result
+
+            del assignment[var]
+    return None
+
 def backtrack_fc(variables : list, domains : dict, assignment : dict, neighbors : dict):
     if len(assignment) == len(variables):
         return assignment

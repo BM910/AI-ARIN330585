@@ -4,41 +4,51 @@ import roomba_algos
 from roomba_node import randomize_map
 import time
 
+# Main GUI class: simulation layout, settings, and animation loop
 class RoombaGUI:
     def __init__(self):
+        # Initialize internal simulation state variables
         self.current_room = None
         self.room_size = 5
         
+        # Configure the main window properties
         self.window = tk.Tk()
         self.window.title("Modern Roomba Simulator")
         self.window.geometry("1050x650")
         self.window.state("zoomed")
         
+        # Apply a clean theme to the widget components
         self.style = ttk.Style()
         self.style.theme_use("clam") 
         
+        # Set up a 3-column layout structure for the layout weights
         self.window.columnconfigure(0, weight=1)
         self.window.columnconfigure(1, weight=2)
         self.window.columnconfigure(2, weight=1)
         self.window.rowconfigure(0, weight=1)
 
+        # Left Column: Configuration options sidebar
         self.frm_algo_options = ttk.Frame(self.window, padding=15, relief="flat")
         self.frm_algo_options.grid(column=0, row=0, sticky="nsew")
         self.frm_algo_options.columnconfigure(0, weight=1)
 
+        # Center Column: Visual simulation viewport 
         self.frm_map_container = ttk.LabelFrame(self.window, text=" Simulation Map ", padding=10)
         self.frm_map_container.grid(column=1, row=0, sticky="nsew", padx=10, pady=10)
         self.frm_map_container.columnconfigure(0, weight=1)
         self.frm_map_container.rowconfigure(0, weight=1)
 
+        # Canvas widget dedicated to rendering the cell matrix grid
         self.map_canvas = tk.Canvas(master=self.frm_map_container, bg="#EAEAEA", highlightthickness=0)
         self.map_canvas.grid(column=0, row=0, sticky="nsew")
 
+        # Right Column: Execution logs terminal output
         self.frm_state_log = ttk.LabelFrame(self.window, text=" Execution Logs ", padding=10)
         self.frm_state_log.grid(column=2, row=0, sticky="nsew", padx=10, pady=10)
         self.frm_state_log.columnconfigure(0, weight=1)
         self.frm_state_log.rowconfigure(0, weight=1)
 
+        # Scrollable text pane for tracking Roomba operations
         self.log_text = tk.Text(self.frm_state_log, bg="white", wrap=tk.WORD, font=("Consolas", 10), relief="flat")
         self.log_scroll = ttk.Scrollbar(self.frm_state_log, command=self.log_text.yview)
         self.log_text.configure(yscrollcommand=self.log_scroll.set)
@@ -46,6 +56,7 @@ class RoombaGUI:
         self.log_text.grid(column=0, row=0, sticky="nsew")
         self.log_scroll.grid(column=1, row=0, sticky="ns")
 
+        # Mapping of display text to backend algorithm execution functions
         self.algo_dict = {
             "BREADTH FIRST SEARCH 1": roomba_algos.bfs1,
             "BREADTH FIRST SEARCH 2": roomba_algos.bfs2,
@@ -64,6 +75,7 @@ class RoombaGUI:
             "SIMULATED ANNEALING": roomba_algos.simulated_annealing
         }
 
+        # Dropdown selection panel for picking search strategies
         lbl_select = ttk.Label(self.frm_algo_options, text="Select Algorithm:", font=("Helvetica", 10, "bold"))
         lbl_select.grid(column=0, row=0, sticky="w", pady=(0, 5))
 
@@ -72,9 +84,11 @@ class RoombaGUI:
         self.algo_cb.grid(column=0, row=1, sticky="ew", pady=(0, 20))
         self.algo_cb.current(0)
 
+        # Style customization block for action trigger buttons
         self.style.configure("Run.TButton", font=("Helvetica", 11, "bold"), foreground="white", background="#4A90E2")
         self.style.map("Run.TButton", background=[("active", "#357ABD")])
 
+        # Interactive controls for triggering actions and updating the map view
         btn_run = ttk.Button(self.frm_algo_options, text="Run Algorithm", style="Run.TButton", command=self.run_selected)
         btn_run.grid(column=0, row=2, sticky="ew", pady=5)
 
@@ -84,6 +98,7 @@ class RoombaGUI:
         btn_redraw = ttk.Button(self.frm_algo_options, text="Redraw Room", command=lambda: self.draw_matrix_on_map(self.current_room))
         btn_redraw.grid(column=0, row=4, sticky="ew", pady=5)
 
+        # Slider configurations managing frame step rendering speed
         lbl_speed = ttk.Label(self.frm_algo_options, text="Animation Speed:", font=("Helvetica", 10, "bold"))
         lbl_speed.grid(column=0, row=5, sticky="w", pady=(15, 2))
 
@@ -95,6 +110,7 @@ class RoombaGUI:
         self.speed_display.grid(column=0, row=7, sticky="w", pady=(0, 10))
         self.speed_value.trace_add("write", self.update_speed_display)
 
+        # Size adjustment controls for changing the grid row and column counts
         lbl_room_size = ttk.Label(self.frm_algo_options, text="Random Room Size:", font=("Helvetica", 10, "bold"))
         lbl_room_size.grid(column=0, row=8, sticky="w", pady=(10, 2))
 
@@ -108,9 +124,11 @@ class RoombaGUI:
 
         self.frm_algo_options.rowconfigure(11, weight=1)
 
+        # Clear button placed at the base of the control configuration panel
         btn_clr_log = ttk.Button(self.frm_algo_options, text="Clear Log", command=lambda: self.update_log(clear=True))
         btn_clr_log.grid(column=0, row=12, sticky="ew", pady=(5, 0))
 
+    # Appends new text streams or wipes clean the logger tracking terminal
     def update_log(self, message="", clear=False):
         if clear:
             self.log_text.delete("1.0", tk.END)
@@ -118,20 +136,24 @@ class RoombaGUI:
             self.log_text.insert(tk.END, message + "\n")
         self.log_text.see(tk.END)
 
+    # Generates a brand new random layout structure and pushes it to render
     def generate_new_random_map(self):
         self.current_room = randomize_map(self.room_size)
         self.draw_matrix_on_map(self.current_room)
 
+    # Scales room bounds up while staying within a maximum threshold of 10
     def increase_room_size(self):
         if self.room_size < 10:
             self.room_size += 1
             self.room_size_display.configure(text=f"{self.room_size}x{self.room_size}")
 
+    # Scales room bounds down while staying within a minimum threshold of 3
     def decrease_room_size(self):
         if self.room_size > 3:
             self.room_size -= 1
             self.room_size_display.configure(text=f"{self.room_size}x{self.room_size}")
 
+    # Performs canvas grid coordinate conversions and renders color tiles dynamically
     def draw_matrix_on_map(self, matrix):
         if matrix is None: return
         self.window.update_idletasks()
@@ -139,19 +161,24 @@ class RoombaGUI:
         self.map_canvas.delete("all")
         rows, cols = len(matrix), len(matrix[0])
         
+        # Fetch actual viewport window canvas bounds
         c_width = self.map_canvas.winfo_width()
         c_height = self.map_canvas.winfo_height()
         
+        # Calculate optimal tile size scaling to remain locked into viewport ratios
         cell_size = min(c_width // cols, c_height // rows)
         
         if cell_size <= 0:
             cell_size = 40
             
+        # Determine centering offset shifts for grid display alignment
         x_offset = (c_width - (cols * cell_size)) // 2
         y_offset = (c_height - (rows * cell_size)) // 2
         
+        # Color mapping dictionary for empty spaces, dirt, obstacles, and Roomba locations
         colors = {0: "#F5F5F5", 1: "#A07855", 2: "#333333", 3: "#2ECC71"}
         
+        # Nested loop block rendering bounding geometry arrays onto the map view
         for r in range(rows):
             for c in range(cols):
                 val = matrix[r][c]
@@ -163,10 +190,12 @@ class RoombaGUI:
                 y2 = y1 + cell_size
                 
                 self.map_canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="#D0D0D0", width=1)
+                # Render an extra vacuum chassis node layer if index maps to a value of 3
                 if val == 3:
                     padding = max(2, cell_size // 8)
                     self.map_canvas.create_oval(x1 + padding, y1 + padding, x2 - padding, y2 - padding, fill="#7F8C8D", outline="white", width=2)
 
+    # Dispatches active room matrix payload to chosen sorting/searching logic wrappers
     def run_selected(self):
         if self.current_room is None:
             self.update_log("Please generate a map first using Randomize!")
@@ -176,10 +205,12 @@ class RoombaGUI:
         algo_func = self.algo_dict[algo_name]
         message = None
 
+        # Handle benchmarking calculations wrapping the core pathfinding execution
         start_time = time.perf_counter()
         result = algo_func(self.current_room)
         end_time = time.perf_counter()
 
+        # Parse potential tuple overrides returning standard structures alongside custom string remarks
         if isinstance(result, tuple):
             result, message = result
         
@@ -187,6 +218,7 @@ class RoombaGUI:
             self.update_log("No solution found to clean the room!\n")
             return
             
+        # Format custom arrays or class object list backtracks into structured coordinate timelines
         path_timeline = []
         if isinstance(result, list):
             path_timeline = result
@@ -198,12 +230,15 @@ class RoombaGUI:
                 else:
                     path_timeline.append((node.state, "Initial Position"))
         
+        # Log calculation performance outcomes
         self.update_log(f"{algo_name} : {(end_time - start_time) * 1000:.1f}ms")
         if message:
             self.update_log(message)
 
+        # Kick off recursive task-loop frames targeting sequential node transitions
         self.animate_steps(path_timeline, 0)
 
+    # Recursive animation player updating grids sequentially using structured delay loops
     def animate_steps(self, path_timeline, step_index):
         if step_index >= len(path_timeline):
             self.update_log("Animation complete!\n")
@@ -213,12 +248,15 @@ class RoombaGUI:
         self.draw_matrix_on_map(room_state)
         self.update_log(action_text)
 
+        # Enforce safe delay constraints before scheduling the next step frame
         delay = max(5, min(200, self.speed_value.get()))
         self.window.after(delay, lambda: self.animate_steps(path_timeline, step_index + 1))
 
+    # Event hook handling variable state synchronization when the delay slider shifts
     def update_speed_display(self, *args):
         delay = max(5, min(200, self.speed_value.get()))
         self.speed_display.configure(text=f"{delay} ms delay")
 
+    # Boots the Tkinter window processing runtime thread
     def start(self):
         self.window.mainloop()

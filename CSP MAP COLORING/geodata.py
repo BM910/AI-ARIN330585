@@ -1,4 +1,5 @@
 import json
+import os
 from shapely.geometry import shape
 
 def load_map_data(geojson_path):
@@ -7,6 +8,10 @@ def load_map_data(geojson_path):
     1. A list of all province names (variables)
     2. A dictionary mapping each province to a list of its neighbors (constraints)
     """
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    if not os.path.isabs(geojson_path):
+        geojson_path = os.path.join(base_dir, geojson_path)
+
     with open(geojson_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
 

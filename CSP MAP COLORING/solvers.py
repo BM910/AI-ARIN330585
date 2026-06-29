@@ -33,7 +33,7 @@ def backtrack(variables : list, domains : dict, assignment : dict, neighbors : d
             del assignment[var]
     return None
 
-def backtrack_fc(variables : list, domains : dict, assignment : dict, neighbors : dict):
+def forwardcheck(variables : list, domains : dict, assignment : dict, neighbors : dict):
     if len(assignment) == len(variables):
         return assignment
 
@@ -59,7 +59,7 @@ def backtrack_fc(variables : list, domains : dict, assignment : dict, neighbors 
             
             # recursive
             if not failure_early:
-                result = backtrack_fc(variables, local_domains, assignment, neighbors)
+                result = forwardcheck(variables, local_domains, assignment, neighbors)
                 if result is not None:
                     return result
             

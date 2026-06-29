@@ -200,7 +200,7 @@ def ucs(initial_state):
         for dx, dy, action in moves:
             child_node = Node(node.generate_new_state(dx, dy), node, action, depth=node.depth+1, g_value=node.g_value+1)
             
-            x, y = child_node.find_roomba()
+            x, y = child_node.x, child_node.y
             if node.state[x][y] == 1:
                 child_node.g_value -= 1
 

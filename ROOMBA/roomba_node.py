@@ -7,6 +7,8 @@ class Node:
         self.action = action
         self.depth = depth
 
+        self.x, self.y = self.find_roomba()
+
         self.g_value = g_value
         self.h_value = self.heu_min_manhattan() + self.heu_dirty_value() if use_heuristic else 0
         self.f_value = self.g_value + self.h_value
@@ -26,7 +28,7 @@ class Node:
 
     def heu_min_manhattan(self, weight=0.1):
         min_dist = -1
-        x, y = self.find_roomba()
+        x, y = self.x, self.y
         for i, row in enumerate(self.state):
             for j, tile in enumerate(row):
                 if tile == 1:
@@ -36,7 +38,7 @@ class Node:
     
     def heu_sum_manhattan(self, weight=0.6):
         sum_dist = 0
-        x, y = self.find_roomba()
+        x, y = self.x, self.y
         for i, row in enumerate(self.state):
             for j, tile in enumerate(row):
                 if tile == 1:
@@ -53,10 +55,10 @@ class Node:
         for i, row in enumerate(self.state):
             if 3 in row:
                 return (i, row.index(3))
-        return None
+        return (-1, -1)
 
     def get_moves(self):
-        x, y = self.find_roomba()
+        x, y = self.x, self.y
         full_moves = [(-1, 0, "UP"), (1, 0, "DOWN"), (0, -1, "LEFT"), (0, 1, "RIGHT")]
         # prioritized_moves = [] # prioritize
         valid_moves = []
@@ -80,7 +82,7 @@ class Node:
         return False
     
     def generate_new_state(self, dx, dy):
-        x, y = self.find_roomba()
+        x, y = self.x, self.y
         nx, ny = x + dx, y + dy
         new_state = [list(row) for row in self.state]
         new_state[x][y] = 0

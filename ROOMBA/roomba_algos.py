@@ -247,7 +247,7 @@ def a_star(initial_state):
     
     counter = 0
     frontier = [(node.f_value, counter, node)]
-    reached = {str(node.state) : node.g_value}
+    reached = {node.state : node.g_value}
 
     while frontier:
         _, _, node = heapq.heappop(frontier)
@@ -258,18 +258,15 @@ def a_star(initial_state):
         
 
 
-        if node.g_value > reached[str(node.state)]:
+        if node.g_value > reached[node.state]:
             continue
 
         moves = node.get_moves()
         for dx, dy, action in moves:
             child_node = Node(node.generate_new_state(dx, dy), node, action, depth=node.depth+1 ,g_value=node.g_value+1, use_heuristic=True)
-            if "cleaned" in child_node.action:
-                child_node.g_value -= 0.5
 
-            child_node_str = str(child_node.state)
-            if child_node_str not in reached or child_node.g_value < reached[child_node_str]:
-                    reached[child_node_str] = child_node.g_value
+            if child_node.state not in reached or child_node.g_value < reached[child_node.state]:
+                    reached[child_node.state] = child_node.g_value
                     counter += 1
                     heapq.heappush(frontier, (child_node.f_value, counter, child_node))
 

@@ -134,27 +134,31 @@ def dfs2(initial_state):
 def ids(initial_state, max_depth=100):
     if not initial_state:
         return None
-    
-    for depth in range(max_depth):
+
+    reference = {"total" : 0, "max" : 0}
+
+    for depth in range(0, max_depth, 3):
         reached = set() 
-        result = dls(initial_state, depth, reached)
+        result = dls(initial_state, depth, reached, reference)
         if result != "cutoff":
-            return result
+            message = f"Most state explored at once: {reference['max']}\nExplored {reference['total']} total states"
+            return (result, message)
     return None
 
 
-def dls(initial_state, limit, reached):
+def dls(initial_state, limit, reached, reference):
     node = Node(initial_state)
-    return recursive_dls(node, limit, reached)
+    return recursive_dls(node, limit, reached, reference)
 
 
-def recursive_dls(node: Node, limit, reached):
+def recursive_dls(node: Node, limit, reached, reference):
     if node.is_clean():
         return node
     if limit == 0:
         return "cutoff"
     
     reached.add(node.state)
+    reference['max'] = max(reference['max'], len(reached))
     
     cutoff_occurred = False
     moves = node.get_moves()
@@ -166,7 +170,8 @@ def recursive_dls(node: Node, limit, reached):
             continue
             
         child_node = Node(new_state, node, action, node.depth + 1)
-        result = recursive_dls(child_node, limit - 1, reached)
+        reference['total'] += 1
+        result = recursive_dls(child_node, limit - 1, reached, reference)
         
         if result == "cutoff":
             cutoff_occurred = True
@@ -273,7 +278,7 @@ def a_star(initial_state):
     return None
 
 
-def ida_star(initial_state, max_f=100):
+def ida_star(initial_state, max_f=1000):
     if not initial_state:
         return
     
@@ -290,7 +295,7 @@ def ida_star(initial_state, max_f=100):
         highest_state_count = max(highest_state_count, states_count)
 
         if isinstance(result, Node):
-            message = f"Highest state count: {states_count}\nExplored {total_states_explored} total states"
+            message = f"Most state explored at once: {highest_state_count}\nExplored {total_states_explored} total states"
             return (result, message)
             
         limit = new_limit

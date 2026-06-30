@@ -20,7 +20,7 @@ class Node:
         move_and_cost = f"Moved {self.action}"
         return state + move_and_cost
 
-    def heu_dirty_value(self, weight=0.8):
+    def heu_dirty_value(self, weight=1.8):
         dirty_tile_count = 0
         for row in self.state:
             dirty_tile_count += (row.count(1))
@@ -81,13 +81,16 @@ class Node:
             return True
         return False
     
-    def generate_new_state(self, dx, dy):
+    def generate_new_state(self, dx, dy, return_list=False):
         x, y = self.x, self.y
         nx, ny = x + dx, y + dy
         new_state = [list(row) for row in self.state]
         new_state[x][y] = 0
         new_state[nx][ny] = 3
-        return tuple(tuple(row) for row in new_state)
+        if return_list:
+            return new_state
+        else:
+            return tuple(tuple(row) for row in new_state)
     
     def get_parent_list(self):
         path = [self]
@@ -121,3 +124,21 @@ def randomize_map(custom_size=None):
             roomba_placed = True
 
     return tuple(tuple(row) for row in current_room)
+
+
+if __name__ == "__main__":
+    def print_map(state, tile_set=None):
+        for row in state:
+            if tile_set:
+                for tile in row:
+                    print(tile_set[tile], end=" ")
+                print()
+            else:
+                print(row)
+
+    tile_set = {-1: "~", 0: " ", 1: "_", 2: "#", 3: "*"}
+
+    map = randomize_map(6)
+    print_map(map, tile_set)
+    print()
+    print_map(map)

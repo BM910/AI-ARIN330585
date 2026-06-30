@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import roomba_algos
+import partial_observation
 from roomba_node import randomize_map
 import time
 
@@ -72,7 +73,8 @@ class RoombaGUI:
             "STOCHASTIC HILL CLIMBING": roomba_algos.stochastic_hc,
             "RANDOM RESTART HC": roomba_algos.random_restart_hc,
             "LOCAL BEAM SEARCH": roomba_algos.local_beam_search,
-            "SIMULATED ANNEALING": roomba_algos.simulated_annealing
+            "SIMULATED ANNEALING": roomba_algos.simulated_annealing,
+            "PARTIAL OBSERVATION SEARCH" : partial_observation.partial_observation_search
         }
 
         # Dropdown selection panel for picking search strategies
@@ -143,7 +145,7 @@ class RoombaGUI:
 
     # Scales room bounds up while staying within a maximum threshold of 10
     def increase_room_size(self):
-        if self.room_size < 10:
+        if self.room_size < 8:
             self.room_size += 1
             self.room_size_display.configure(text=f"{self.room_size}x{self.room_size}")
 
@@ -176,7 +178,7 @@ class RoombaGUI:
         y_offset = (c_height - (rows * cell_size)) // 2
         
         # Color mapping dictionary for empty spaces, dirt, obstacles, and Roomba locations
-        colors = {0: "#F5F5F5", 1: "#A07855", 2: "#333333", 3: "#2ECC71"}
+        colors = {-1: "#000000", 0: "#F5F5F5", 1: "#A07855", 2: "#333333", 3: "#2ECC71"}
         
         # Nested loop block rendering bounding geometry arrays onto the map view
         for r in range(rows):

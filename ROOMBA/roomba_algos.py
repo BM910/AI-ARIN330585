@@ -273,61 +273,66 @@ def a_star(initial_state):
     return None
 
 
-def ida_star(initial_state, max_f=1000):
+def ida_star(initial_state, max_f=100):
     if not initial_state:
         return
-    limit = 0
-    node = None
-    total_reached = 0
-    max_reached = float(0)
-    while limit <= max_f:
-        node, new_limit, len_reached = a_star_limited(initial_state, limit)
-        total_reached += len_reached
-        max_reached = max(max_reached, len_reached)
-        if node != "cutoff":
-            message = f"Reached total {total_reached} states\nReached max {max_reached} states"
-            return (node, message)
-        limit = max(limit +1, new_limit)
-    return node
-
-
-def a_star_limited(initial_state, limit):
+    
     node = Node(initial_state, g_value=0, use_heuristic=True)
+    limit = node.f_value 
+    total_states_explored = 0
+    highest_state_count = 0
 
-    counter = 0
-    frontier = [(node.f_value, counter, node)]
-    reached = {str(node.state) : node.g_value}
-    min_new_limit = -1
+    path_states = set()
 
-    while frontier:
-        _, _, node = heapq.heappop(frontier)
+    while limit < max_f:
+        result, new_limit, states_count = dfs_limited(node, limit, path_states)
+        total_states_explored += states_count
+        highest_state_count = max(highest_state_count, states_count)
 
-        if node.is_clean():
-            return (node, min_new_limit, len(reached))
+        if isinstance(result, Node):
+            message = f"Highest state count: {states_count}\nExplored {total_states_explored} total states"
+            return (result, message)
+            
+        limit = new_limit
 
-        if node.g_value > reached[str(node.state)]:
-            continue
+def dfs_limited(node, limit, path_states):
+    states_explored = 1
+    
+    if node.is_clean():
+        return node, limit, states_explored
 
-        moves = node.get_moves()
-        for dx, dy, action in moves:
-            if "cleaned" in action:
-                child_node = Node(node.generate_new_state(dx, dy), node, action, depth=node.depth+1 ,g_value=node.g_value+0.5, use_heuristic=True)
-            else:
-                child_node = Node(node.generate_new_state(dx, dy), node, action, depth=node.depth+1 ,g_value=node.g_value+1, use_heuristic=True)
+    if node.f_value > limit:
+        return "cutoff", node.f_value, states_explored
 
-            if child_node.f_value >= limit:
-                min_new_limit = child_node.f_value if min_new_limit == -1 else min(min_new_limit, child_node.f_value)
-                continue
+    if node.state in path_states:
+        return "cutoff", float('inf'), states_explored
 
-            child_node_str = str(child_node.state)
-            if child_node_str not in reached or child_node_str in reached and child_node.g_value < reached[child_node_str]:
-                    reached[child_node_str] = child_node.g_value
-                    counter += 1
-                    heapq.heappush(frontier, (child_node.f_value, counter, child_node))
+    path_states.add(node.state)
+    min_cutoff_limit = float('inf')
+    
+    moves = node.get_moves()
+    for dx, dy, action in moves:
+        child_node = Node(
+            node.generate_new_state(dx, dy), 
+            node, 
+            action, 
+            depth=node.depth + 1, 
+            g_value=node.g_value + 1, 
+            use_heuristic=True
+        )
 
-    if min_new_limit == -1:
-        return (None, float('inf'), len(reached))
-    return ("cutoff", min_new_limit, len(reached))
+        result, new_limit, child_states = dfs_limited(child_node, limit, path_states)
+        states_explored += child_states
+        
+        if isinstance(result, Node):
+            return result, limit, states_explored
+            
+        if result == "cutoff":
+            min_cutoff_limit = min(min_cutoff_limit, new_limit)
+
+    path_states.remove(node.state)
+
+    return "cutoff", min_cutoff_limit, states_explored
 
 
 def simple_hc(initial_state):
